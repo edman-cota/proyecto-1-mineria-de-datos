@@ -68,3 +68,27 @@ worst_movie <- movies %>%
 
 print(worst_movie)
 ```
+
+4.5 ¿Cuántas películas se hicieron en cada año? ¿En qué año se hicieron más
+películas? Haga un gráfico de barras
+```{r}
+movies_per_year <- movies %>%
+  group_by(year = format(as.Date(releaseDate), "%Y")) %>%
+  summarise(count = n()) %>%
+  arrange(desc(count))
+
+movies_per_year_with_count <- movies %>%
+  group_by(year = format(as.Date(releaseDate), "%Y")) %>%
+  summarise(count = n()) %>%
+  arrange(desc(count)) %>%
+  select(year, count)
+  head(5)
+
+print(movies_per_year_with_count)
+
+ggplot(movies_per_year, aes(x=year, y=count)) +
+  geom_bar(stat="identity", fill="steelblue") +
+  ggtitle("Número de películas por año") +
+  xlab("Año") +
+  ylab("Número de películas")
+```
