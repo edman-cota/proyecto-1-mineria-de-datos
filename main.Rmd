@@ -1,0 +1,43 @@
+---
+title: "Movies"
+output: html_document
+date: "2025-01-28"
+---
+
+```{r}
+library(dplyr)
+library(ggplot2)
+library(readr)
+```
+
+
+1. Haga una exploración rápida de sus datos, para eso haga un resumen de su conjunto
+de datos.
+
+```{r}
+movies <- read_csv('./movies.csv')
+head(movies)
+summary(movies)
+```
+
+2. Diga el tipo de cada una de las variables (cualitativa ordinal o nominal, cuantitativa
+continua, cuantitativa discreta)
+```{r}
+str(movies)
+```
+
+3. Investigue si las variables cuantitativas siguen una distribución normal y haga una
+tabla de frecuencias de las variables cualitativas. Explique todos los resultados
+
+4. Responda las siguientes preguntas
+
+4.1 ¿Cuáles son las 10 películas que contaron con más presupuesto?
+```{r}
+top_budget_movies <- movies %>% 
+  arrange(desc(budget)) %>% 
+  select(originalTitle, budget) %>%
+  head(10)
+
+print(top_budget_movies)
+```
+
