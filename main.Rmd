@@ -92,3 +92,33 @@ ggplot(movies_per_year, aes(x=year, y=count)) +
   xlab("Año") +
   ylab("Número de películas")
 ```
+
+4.6 ¿Cuál es el género principal de las 20 películas más recientes? ¿Cuál es el género
+principal que predomina en el conjunto de datos? Represéntelo usando un gráfico. ¿A qué
+género principal pertenecen las películas más largas?
+```{r}
+recent_movies_genres <- movies %>%
+  arrange(desc(releaseDate)) %>%
+  head(20) %>%
+  group_by(genres) %>%
+  summarise(count = n()) %>%
+  arrange(desc(count))
+
+print(recent_movies_genres)
+
+predominant_genre <- movies %>%
+  group_by(genres) %>%
+  summarise(count = n()) %>%
+  arrange(desc(count)) %>%
+  head(1)
+
+print(predominant_genre)
+
+ggplot(movies, aes(x = genres)) +
+  geom_bar(fill = "orange") +
+  ggtitle("Distribución de géneros") +
+  xlab("Género") +
+  ylab("Número de películas")
+
+
+```
