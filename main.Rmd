@@ -120,5 +120,109 @@ ggplot(movies, aes(x = genres)) +
   xlab("Género") +
   ylab("Número de películas")
 
+```
 
+4.7  ¿Las películas de qué genero principal obtuvieron mayores ganancias?
+```{r}
+genre_revenue <- movies %>%
+  group_by(genres) %>%
+  summarise(total_revenue = sum(revenue, na.rm = TRUE)) %>%
+  arrange(desc(total_revenue))
+
+print(genre_revenue)
+```
+
+4.8 ¿La cantidad de actores influye en los ingresos de las películas?¿se han hecho
+películas con más actores en los últimos años?
+```{r}
+correlation <- cor(movies$actorsAmount, movies$revenue, use="complete.obs")
+print(correlation)
+
+recent_movies_actors <- movies %>%
+  arrange(desc(releaseDate)) %>%
+  head(100) %>%
+  summarise(mean_actors=mean(actorsAmount, na.rm=TRUE))
+
+print(recent_movies_actors)
+
+```
+
+4.9 ¿Es posible que la cantidad de hombres y mujeres en el reparto influya en la
+popularidad y los ingresos de las películas?
+```{r}
+cor_men_revenue <- cor(movies$castMenAmount, movies$revenue, use = "complete.obs")
+cor_women_revenue <- cor(movies$castWomenAmount, movies$revenue, use = "complete.obs")
+cor_men_popularity <- cor(movies$castMenAmount, movies$popularity, use = "complete.obs")
+cor_women_popularity <- cor(movies$castWomenAmount, movies$popularity, use = "complete.obs")
+
+print(cor_men_revenue)
+print(cor_women_revenue)
+print(cor_men_popularity)
+print(cor_women_popularity)
+```
+
+4.10 ¿Quiénes son los directores que hicieron las 20 películas mejor
+calificadas?
+```{r}
+top_rated_directors <- movies %>%
+  arrange(desc(voteAvg)) %>%
+  head(20) %>%
+  select(director, voteAvg)
+
+print(top_rated_directors)
+```
+
+4.11 ¿Cómo se correlacionan los presupuestos con los ingresos? ¿Los altos
+presupuestos significan altos ingresos? Haga los gráficos que necesite, histograma,
+diagrama de dispersión
+```{r}
+ggplot(movies, aes(x = budget, y = revenue)) +
+  geom_point() +
+  ggtitle("Correlación entre presupuesto e ingresos") +
+  xlab("Presupuesto") +
+  ylab("Ingresos")
+
+correlation_budget_revenue <- cor(movies$budget, movies$revenue, use = "complete.obs")
+print(correlation_budget_revenue)
+```
+
+4.12 ¿Se asocian ciertos meses de lanzamiento con mejores ingresos?
+```{r}
+movies$releaseMonth <- format(as.Date(movies$releaseDate), "%m")
+
+monthly_revenue <- movies %>%
+  group_by(releaseMonth) %>%
+  summarise(mean_revenue = mean(revenue, na.rm = TRUE)) %>%
+  arrange(desc(mean_revenue))
+
+print(monthly_revenue)
+```
+
+4.13 ¿En qué meses se han visto los lanzamientos con mejores ingresos?
+¿cuantas películas, en promedio, se han lanzado por mes?
+```{r}
+movies_per_month <- movies %>%
+  group_by(releaseMonth) %>%
+  summarise(count = n()) %>%
+  summarise(mean_movies = mean(count))
+
+print(movies_per_month)
+```
+
+4.14 ¿Cómo se correlacionan las calificaciones con el éxito comercial?
+```{r}
+correlation_voteAvg_revenue <- cor(movies$voteAvg, movies$revenue, use = "complete.obs")
+print(correlation_voteAvg_revenue)
+```
+
+4.15 ¿Qué estrategias de marketing, como videos promocionales o páginas
+oficiales, generan mejores resultados?
+```{r}
+movies %>%
+  group_by(video) %>%
+  summarise(mean_revenue = mean(revenue, na.rm = TRUE))
+
+movies %>%
+  group_by(homePage) %>%
+  summarise(mean_revenue = mean(revenue, na.rm = TRUE))
 ```
