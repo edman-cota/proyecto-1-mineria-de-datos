@@ -1,6 +1,9 @@
 ---
 title: "Movies"
-output: html_document
+output:
+  word_document: default
+  html_document: default
+  pdf_document: default
 date: "2025-01-28"
 ---
 
@@ -8,6 +11,8 @@ date: "2025-01-28"
 library(dplyr)
 library(ggplot2)
 library(readr)
+library(scales)
+library(stringr)
 ```
 
 1.  Haga una exploración rápida de sus datos, para eso haga un resumen de su conjunto de datos.
@@ -147,19 +152,6 @@ print(recent_movies_actors)
 
 ```
 
-4.9 ¿Es posible que la cantidad de hombres y mujeres en el reparto influya en la
-popularidad y los ingresos de las películas?
-```{r}
-cor_men_revenue <- cor(movies$castMenAmount, movies$revenue, use = "complete.obs")
-cor_women_revenue <- cor(movies$castWomenAmount, movies$revenue, use = "complete.obs")
-cor_men_popularity <- cor(movies$castMenAmount, movies$popularity, use = "complete.obs")
-cor_women_popularity <- cor(movies$castWomenAmount, movies$popularity, use = "complete.obs")
-
-print(cor_men_revenue)
-print(cor_women_revenue)
-print(cor_men_popularity)
-print(cor_women_popularity)
-```
 
 4.10 ¿Quiénes son los directores que hicieron las 20 películas mejor
 calificadas?
@@ -225,4 +217,130 @@ movies %>%
 movies %>%
   group_by(homePage) %>%
   summarise(mean_revenue = mean(revenue, na.rm = TRUE))
+```
+4.16 ¿La popularidad del elenco está directamente correlacionada con el éxito 
+de taquilla?
+
+```{r}
+# Calcular la correlación entre el número de actores y los ingresos
+correlation_cast_revenue <- cor(movies$actorsAmount, movies$revenue, use = "complete.obs")
+
+# Imprimir el resultado de la correlación
+print(correlation_cast_revenue)
+ggplot(movies, aes(x = actorsAmount, y = revenue)) +
+  geom_point() +
+  ggtitle("Relación entre número de actores y éxito de taquilla") +
+  xlab("Número de actores") +
+  ylab("Ingresos de taquilla")
+
+
+```
+
+5.1 ¿Cuál es la relación entre la duración de las películas y su popularidad?
+```{r}
+correlation_runtime_popularity <- cor(movies$runtime, movies$popularity, use = "complete.obs")
+print(correlation_runtime_popularity)
+
+ggplot(movies, aes(x = runtime, y = popularity)) +
+  geom_point(alpha = 0.5, color = "blue") +
+  ggtitle("Relación entre duración y popularidad") +
+  xlab("Duración (min)") +
+  ylab("Popularidad")
+
+
+```
+5.2 ¿Qué director ha producido más películas?
+```{r}
+most_frequent_directors <- movies %>%
+  group_by(director) %>%
+  summarise(count = n()) %>%
+  arrange(desc(count)) %>%
+  head(10)
+
+print(most_frequent_directors)
+
+
+```
+5.3 ¿Las películas con más votos tienden a ser más largas?
+```{r}
+correlation_votes_runtime <- cor(movies$voteCount, movies$runtime, use = "complete.obs")
+print(correlation_votes_runtime)
+
+ggplot(movies, aes(x = voteCount, y = runtime)) +
+  geom_point(alpha = 0.5, color = "red") +
+  ggtitle("Relación entre cantidad de votos y duración") +
+  xlab("Cantidad de votos") +
+  ylab("Duración (min)")
+
+```
+
+5.4 ¿Cuál ha sido la evolución del presupuesto promedio de las películas a lo largo de los años?
+
+```{r}
+avg_budget_per_year <- movies %>%
+  group_by(year = as.numeric(format(as.Date(releaseDate), "%Y"))) %>%
+  summarise(avg_budget = mean(budget, na.rm = TRUE))
+
+ggplot(avg_budget_per_year, aes(x = year, y = avg_budget)) +
+  geom_line(color = "darkgreen", size = 1) +
+  geom_point(color = "black", size = 2) + 
+  scale_x_continuous(breaks = seq(min(avg_budget_per_year$year), max(avg_budget_per_year$year), by = 10)) +  # Intervalos de 10 años
+  scale_y_continuous(labels = scales::label_number(scale = 1e-6, suffix = "M")) +  # Mostrar en millones de USD
+  ggtitle("Evolución del Presupuesto Promedio por Año") +
+  xlab("Año") +
+  ylab("Presupuesto Promedio (Millones de USD)") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))  # Rotar etiquetas del eje X
+```
+
+5.5 ¿Existen diferencias en la duración de las películas según su género principal?
+
+```{r}
+avg_runtime_by_genre <- movies %>%
+  mutate(main_genre = str_extract(genres, "^[^,]+")) %>%  # Extraer el primer género
+  group_by(main_genre) %>%
+  summarise(avg_runtime = mean(runtime, na.rm = TRUE), count = n()) %>%
+  arrange(desc(count)) %>%  # Ordenar por cantidad de películas
+  slice_head(n = 10) %>%  # Seleccionar los 10 géneros más populares
+  arrange(desc(avg_runtime))  # Ordenar por duración promedio
+
+ggplot(avg_runtime_by_genre, aes(x = reorder(main_genre, avg_runtime), y = avg_runtime)) +
+  geom_bar(stat = "identity", fill = "purple") +
+  geom_text(aes(label = round(avg_runtime, 1)), hjust = -0.1, size = 4) +
+  coord_flip() +
+  ggtitle("Duración Promedio por Género (Top 10 más populares)") +
+  xlab("Género") +
+  ylab("Duración Promedio (min)") +
+  theme_minimal() +
+  theme(axis.text.y = element_text(size = 12),
+        plot.margin = margin(10, 10, 10, 50))
+
+
+```
+
+5.6 ¿Cómo ha cambiado la popularidad de las películas en el tiempo?
+
+```{r}
+popularity_over_years <- movies %>%
+  group_by(year = as.numeric(format(as.Date(releaseDate), "%Y"))) %>%
+  summarise(avg_popularity = mean(popularity, na.rm = TRUE))
+
+ggplot(popularity_over_years, aes(x = year, y = avg_popularity)) +
+  geom_line(color = "orange", size = 1) +
+  geom_point(color = "black", size = 2) +
+  scale_x_continuous(
+    breaks = seq(min(popularity_over_years$year, na.rm = TRUE), 
+                 max(popularity_over_years$year, na.rm = TRUE), 
+                 by = 5)  # Intervalos de 5 años
+  ) +
+  ggtitle("Evolución de la Popularidad de las Películas") +
+  xlab("Año") +
+  ylab("Popularidad Promedio") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))  # Rotar etiquetas del eje X
+
+
+
+
+
 ```
